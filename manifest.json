@@ -1,0 +1,8 @@
+{
+  "name": "E-BOK Sampanahan",
+  "short_name": "E-BOK",
+  "start_url": "index.html",
+  "display": "standalone",
+  "theme_color": "#0f6b3a",
+  "background_color": "#ffffff"
+}

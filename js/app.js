@@ -1,0 +1,1 @@
+console.log('E-BOK Sampanahan Ready');
