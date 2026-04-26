@@ -1,1 +1,181 @@
-<!DOCTYPE html><html><head><meta charset='utf-8'><title>Surat</title><link rel='stylesheet' href='../css/style.css'></head><body><div class='card'><h2>Generator Surat</h2><input id='nama' placeholder='Nama Petugas'><input id='tujuan' placeholder='Tujuan'><textarea id='out' style='width:100%;height:220px'></textarea><button onclick='gen()'>Generate</button><script>function gen(){out.value='SURAT PERINTAH TUGAS\n\nNama: '+nama.value+'\nTujuan: '+tujuan.value+'\n\nUPTD Puskesmas Sampanahan';}</script></div></body></html>
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SPT Final - E-BOK Sampanahan</title>
+
+<style>
+body{
+  margin:0;
+  font-family:Arial, sans-serif;
+  background:#f4f7f5;
+}
+.wrap{
+  max-width:900px;
+  margin:auto;
+  padding:20px;
+}
+.card{
+  background:#fff;
+  padding:20px;
+  border-radius:14px;
+  box-shadow:0 3px 12px rgba(0,0,0,.08);
+  margin-bottom:20px;
+}
+h1,h2{
+  margin:0 0 15px;
+  color:#1b5e20;
+}
+input,textarea,button{
+  width:100%;
+  padding:10px;
+  margin-bottom:10px;
+  border:1px solid #ccc;
+  border-radius:8px;
+  box-sizing:border-box;
+}
+button{
+  background:#2e7d32;
+  color:#fff;
+  border:none;
+  cursor:pointer;
+}
+button:hover{
+  background:#1b5e20;
+}
+#preview{
+  background:#fff;
+  padding:30px;
+  border-radius:10px;
+  line-height:1.7;
+}
+.center{text-align:center;}
+.right{text-align:right;}
+</style>
+</head>
+
+<body>
+<div class="wrap">
+
+<div class="card">
+<h1>Generator SPT Final</h1>
+
+<input type="text" id="nama" placeholder="Nama Petugas">
+<input type="text" id="nip" placeholder="NIP">
+<input type="text" id="jabatan" placeholder="Jabatan">
+<input type="text" id="tujuan" placeholder="Tujuan">
+<input type="text" id="kegiatan" placeholder="Kegiatan">
+<input type="date" id="tgl1">
+<input type="date" id="tgl2">
+
+<button onclick="generate()">Generate Surat</button>
+<button onclick="window.print()">Print / PDF</button>
+
+</div>
+
+<div id="preview"></div>
+
+</div>
+
+<script>
+
+// GANTI URL GAS
+const API = "https://script.google.com/macros/s/AKfycbwAbg20ybO32y0y6xoOfvdJAeVipwkM7sT82XUkM9afVCWSlkU4JlhsNaLES8GExMrw/exec";
+
+function romawi(bln){
+const r=["I","II","III","IV","V","VI","VII","VIII","IX","X","XI","XII"];
+return r[bln];
+}
+
+function todayText(){
+const d=new Date();
+return d.toLocaleDateString("id-ID",{
+day:"numeric",
+month:"long",
+year:"numeric"
+});
+}
+
+function generate(){
+
+fetch(API + "?mode=nomorSPT")
+.then(r=>r.json())
+.then(res=>{
+
+let nomor = res.nomor;
+
+let d=new Date();
+let bulan=romawi(d.getMonth());
+let tahun=d.getFullYear();
+
+let fullNo = nomor + "/SPT-BOK/SPNH/" + bulan + "/" + tahun;
+
+let html = `
+<div class='center'>
+<b>PEMERINTAH KABUPATEN KOTABARU</b><br>
+<b>DINAS KESEHATAN</b><br>
+<b>UPTD PUSKESMAS SAMPANAHAN</b><br>
+Jl. Alam Unda Desa Sampanahan Hilir Kecamatan Sampanahan
+<hr>
+<h2>SURAT PERINTAH TUGAS</h2>
+Nomor : ${fullNo}
+</div>
+
+<br>
+
+Yang bertanda tangan di bawah ini menugaskan kepada:
+
+<table width='100%'>
+<tr><td width='180'>Nama</td><td>: ${nama.value}</td></tr>
+<tr><td>NIP</td><td>: ${nip.value}</td></tr>
+<tr><td>Jabatan</td><td>: ${jabatan.value}</td></tr>
+</table>
+
+<br>
+
+Untuk melaksanakan tugas:
+
+<table width='100%'>
+<tr><td width='180'>Tujuan</td><td>: ${tujuan.value}</td></tr>
+<tr><td>Kegiatan</td><td>: ${kegiatan.value}</td></tr>
+<tr><td>Tanggal</td><td>: ${tgl1.value} s/d ${tgl2.value}</td></tr>
+</table>
+
+<br>
+Demikian surat tugas ini dibuat agar dipergunakan sebagaimana mestinya.
+
+<br><br>
+
+<div class='right'>
+Sampanahan, ${todayText()}<br>
+Kepala UPTD Puskesmas Sampanahan
+<br><br><br><br>
+<b>Suko Harianto, S.Kep.Ns</b><br>
+NIP 19770208 200501 1 012
+</div>
+`;
+
+document.getElementById("preview").innerHTML = html;
+
+
+// SIMPAN
+fetch(API + "?mode=saveSurat",{
+method:"POST",
+body:JSON.stringify({
+token:localStorage.getItem("token"),
+tanggal:todayText(),
+jenis:"SPT",
+nomor:fullNo,
+nama:nama.value,
+tujuan:tujuan.value,
+nominal:"0"
+})
+});
+
+});
+}
+
+</script>
+</body>
+</html>
