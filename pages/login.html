@@ -3,138 +3,211 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Login - E-BOK Sampanahan</title>
+<title>Login E-BOK Sampanahan</title>
 
 <style>
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Arial,sans-serif;
+}
+
 body{
-  margin:0;
-  font-family:Arial;
-  background:#e8f5e9;
+min-height:100vh;
+display:flex;
+justify-content:center;
+align-items:center;
+padding:18px;
+background:
+linear-gradient(135deg,rgba(27,94,32,.92),rgba(46,125,50,.85)),
+url('https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1200&q=80');
+background-size:cover;
+background-position:center;
 }
-.wrap{
-  max-width:380px;
-  margin:70px auto;
-  background:#fff;
-  padding:30px;
-  border-radius:18px;
-  box-shadow:0 8px 25px rgba(0,0,0,.12);
+
+.box{
+width:100%;
+max-width:390px;
+padding:30px 26px;
+border-radius:22px;
+background:rgba(255,255,255,.14);
+backdrop-filter:blur(14px);
+-webkit-backdrop-filter:blur(14px);
+border:1px solid rgba(255,255,255,.22);
+box-shadow:0 18px 35px rgba(0,0,0,.22);
+color:#fff;
 }
+
 .logo{
-  text-align:center;
-  font-size:55px;
+font-size:48px;
+text-align:center;
+margin-bottom:10px;
 }
+
 h1{
-  text-align:center;
-  color:#1b5e20;
-  margin:10px 0 0;
+text-align:center;
+font-size:26px;
+margin-bottom:6px;
 }
-p{
-  text-align:center;
-  color:#666;
-  margin-bottom:25px;
+
+.sub{
+text-align:center;
+font-size:13px;
+opacity:.9;
+margin-bottom:22px;
 }
-input{
-  width:100%;
-  padding:12px;
-  margin-bottom:12px;
-  border:1px solid #ccc;
-  border-radius:10px;
-  font-size:15px;
-  box-sizing:border-box;
+
+.input{
+margin-bottom:14px;
 }
+
+.input label{
+display:block;
+font-size:13px;
+margin-bottom:6px;
+opacity:.95;
+}
+
+.input input{
+width:100%;
+padding:13px 14px;
+border:none;
+outline:none;
+border-radius:12px;
+background:rgba(255,255,255,.92);
+color:#222;
+font-size:15px;
+}
+
 button{
-  width:100%;
-  padding:12px;
-  background:#2e7d32;
-  color:white;
-  border:none;
-  border-radius:10px;
-  font-size:16px;
-  cursor:pointer;
+width:100%;
+padding:13px;
+border:none;
+border-radius:12px;
+background:#ffffff;
+color:#1b5e20;
+font-size:15px;
+font-weight:bold;
+cursor:pointer;
+transition:.2s;
 }
+
 button:hover{
-  background:#1b5e20;
+transform:translateY(-2px);
+box-shadow:0 8px 18px rgba(0,0,0,.18);
 }
-.msg{
-  margin-top:15px;
-  text-align:center;
-  color:red;
+
+.loading{
+display:none;
+text-align:center;
+margin-top:12px;
+font-size:13px;
 }
+
 .footer{
-  text-align:center;
-  margin-top:18px;
-  font-size:12px;
-  color:#777;
+margin-top:18px;
+text-align:center;
+font-size:12px;
+opacity:.9;
+}
+
+.small{
+margin-top:10px;
+text-align:center;
+font-size:11px;
+opacity:.85;
 }
 </style>
 </head>
 
 <body>
 
-<div class="wrap">
+<div class="box">
 
-<div class="logo">🏥</div>
+<div class="logo">📘</div>
 
-<h1>E-BOK Sampanahan</h1>
-<p>UPTD Puskesmas Sampanahan</p>
+<h1>E-BOK Login</h1>
+<div class="sub">Sistem Administrasi Sampanahan</div>
 
-<input type="text" id="username" placeholder="Username">
-<input type="password" id="password" placeholder="Password">
+<div class="input">
+<label>Username</label>
+<input id="username" placeholder="Masukkan username">
+</div>
 
-<button onclick="login()">LOGIN</button>
+<div class="input">
+<label>Password</label>
+<input id="password" type="password" placeholder="Masukkan password">
+</div>
 
-<div class="msg" id="msg"></div>
+<button onclick="login()">MASUK SISTEM</button>
+
+<div class="loading" id="loading">
+⏳ Memproses login...
+</div>
 
 <div class="footer">
-Versi Final Google Sheet
+Admin • Bendahara • Kepala
+</div>
+
+<div class="small">
+E-BOK Sampanahan © 2026
 </div>
 
 </div>
 
 <script>
+const API="https://script.google.com/macros/s/AKfycbwAbg20ybO32y0y6xoOfvdJAeVipwkM7sT82XUkM9afVCWSlkU4JlhsNaLES8GExMrw/exec";
 
-// GANTI URL INI
-const API = "https://script.google.com/macros/s/AKfycbwAbg20ybO32y0y6xoOfvdJAeVipwkM7sT82XUkM9afVCWSlkU4JlhsNaLES8GExMrw/exec";
+if(localStorage.getItem("token")){
+location.href="dashboard.html";
+}
 
 function login(){
 
-  const user = document.getElementById("username").value.trim();
-  const pass = document.getElementById("password").value.trim();
+let username=document.getElementById("username").value.trim();
+let password=document.getElementById("password").value.trim();
 
-  if(user=="" || pass==""){
-    msg.innerHTML="Lengkapi username & password";
-    return;
-  }
-
-  fetch(API + "?mode=login",{
-    method:"POST",
-    body:JSON.stringify({
-      username:user,
-      password:pass
-    })
-  })
-  .then(r=>r.json())
-  .then(res=>{
-
-    if(res.status=="success"){
-
-      localStorage.setItem("token",res.token);
-      localStorage.setItem("role",res.role);
-      localStorage.setItem("nama",res.nama);
-
-      location.href="dashboard.html";
-
-    }else{
-      msg.innerHTML="Login gagal";
-    }
-
-  })
-  .catch(err=>{
-    msg.innerHTML="Koneksi gagal";
-  });
-
+if(username=="" || password==""){
+alert("Isi username dan password");
+return;
 }
 
+document.getElementById("loading").style.display="block";
+
+fetch(API,{
+method:"POST",
+body:JSON.stringify({
+mode:"loginMulti",
+username:username,
+password:password
+})
+})
+.then(r=>r.json())
+.then(res=>{
+
+document.getElementById("loading").style.display="none";
+
+if(res.status=="success"){
+
+localStorage.setItem("token",res.token);
+localStorage.setItem("nama",res.nama);
+localStorage.setItem("role",res.role);
+localStorage.setItem("username",username);
+
+location.href="dashboard.html";
+
+}else{
+alert("Username / Password salah");
+}
+
+})
+.catch(err=>{
+document.getElementById("loading").style.display="none";
+alert("Gagal koneksi server");
+});
+
+}
 </script>
 
 </body>
