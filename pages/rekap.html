@@ -3,74 +3,121 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Rekap Laporan - E-BOK Sampanahan</title>
-
+<title>Rekap Premium - E-BOK</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-body{font-family:Arial,sans-serif;background:#f4f7f5;margin:0}
-.wrap{max-width:1200px;margin:auto;padding:20px}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:15px}
-.card,.box{
-background:#fff;padding:18px;border-radius:14px;
-box-shadow:0 3px 12px rgba(0,0,0,.08);margin-bottom:18px
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial,sans-serif}
+body{
+background:linear-gradient(135deg,#eef7f0,#dff0e3);
+padding:18px;
+color:#222;
 }
-h1,h2{margin:0 0 12px;color:#1b5e20}
-.big{font-size:28px;font-weight:bold}
-.small{font-size:12px;color:#777}
-table{width:100%;border-collapse:collapse}
-th,td{border:1px solid #ddd;padding:8px;font-size:14px}
-th{background:#e8f5e9}
-input,select,button{
-padding:10px;border:1px solid #ccc;border-radius:8px
+.wrap{
+max-width:1100px;
+margin:auto;
+}
+h1{
+font-size:30px;
+color:#1b5e20;
+margin-bottom:8px;
+}
+.sub{
+color:#666;
+margin-bottom:22px;
+font-size:14px;
+}
+.stats{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+gap:14px;
+margin-bottom:18px;
+}
+.card{
+background:#fff;
+padding:20px;
+border-radius:18px;
+box-shadow:0 8px 18px rgba(0,0,0,.08);
+}
+.card small{
+color:#666;
+display:block;
+margin-bottom:8px;
+}
+.card b{
+font-size:30px;
+color:#1b5e20;
+}
+.panel{
+background:#fff;
+padding:22px;
+border-radius:18px;
+box-shadow:0 8px 18px rgba(0,0,0,.08);
+margin-bottom:18px;
+}
+.table{
+overflow:auto;
+}
+table{
+width:100%;
+border-collapse:collapse;
+font-size:14px;
+}
+th,td{
+padding:10px;
+border-bottom:1px solid #eee;
+text-align:left;
+}
+th{
+background:#f1f8f2;
+color:#1b5e20;
+}
+.actions{
+display:flex;
+gap:10px;
+flex-wrap:wrap;
+margin-bottom:18px;
 }
 button{
-background:#2e7d32;color:#fff;border:none;cursor:pointer
+padding:11px 15px;
+border:none;
+border-radius:12px;
+cursor:pointer;
+font-weight:bold;
 }
-button:hover{background:#1b5e20}
-.row{display:flex;gap:10px;flex-wrap:wrap}
-@media print{
-button,input,select{display:none}
-body{background:#fff}
-.card,.box{box-shadow:none}
+.green{background:#2e7d32;color:#fff}
+.gray{background:#eceff1}
+@media(max-width:700px){
+h1{font-size:24px}
 }
 </style>
 </head>
 
 <body>
+
 <div class="wrap">
 
-<h1>REKAP LAPORAN PREMIUM</h1>
+<h1>📊 Rekap Premium</h1>
+<div class="sub">Laporan lengkap administrasi & keuangan</div>
 
-<div class="box">
-<div class="row">
-<select id="filter">
-<option value="all">Semua Data</option>
-<option value="today">Hari Ini</option>
-<option value="month">Bulan Ini</option>
-<option value="year">Tahun Ini</option>
-</select>
-
-<button onclick="loadData()">Tampilkan</button>
-<button onclick="window.print()">Print / PDF</button>
-</div>
+<div class="actions">
+<button class="green" onclick="location.href='dashboard.html'">⬅ Dashboard</button>
+<button class="gray" onclick="window.print()">🖨️ Print</button>
 </div>
 
-<div class="grid">
-<div class="card"><div class="small">SPT</div><div class="big" id="spt">0</div></div>
-<div class="card"><div class="small">KUITANSI</div><div class="big" id="kwt">0</div></div>
-<div class="card"><div class="small">DPR</div><div class="big" id="dpr">0</div></div>
-<div class="card"><div class="small">TT</div><div class="big" id="tt">0</div></div>
-<div class="card"><div class="small">TOTAL UANG</div><div class="big" id="uang">Rp 0</div></div>
+<div class="stats">
+<div class="card"><small>Total Data</small><b id="jml">0</b></div>
+<div class="card"><small>Total Pengeluaran</small><b id="uang">Rp0</b></div>
+<div class="card"><small>SPT</small><b id="spt">0</b></div>
+<div class="card"><small>DPR</small><b id="dpr">0</b></div>
 </div>
 
-<div class="box">
-<canvas id="chart1"></canvas>
+<div class="panel">
+<canvas id="grafik" height="100"></canvas>
 </div>
 
-<div class="box">
-<h2>Detail Data</h2>
-<table id="tbl">
+<div class="panel table">
+<table>
 <thead>
 <tr>
 <th>Tanggal</th>
@@ -81,96 +128,99 @@ body{background:#fff}
 <th>Nominal</th>
 </tr>
 </thead>
-<tbody></tbody>
+<tbody id="tbody"></tbody>
 </table>
 </div>
 
 </div>
 
 <script>
-const API = "https://script.google.com/macros/s/AKfycbwAbg20ybO32y0y6xoOfvdJAeVipwkM7sT82XUkM9afVCWSlkU4JlhsNaLES8GExMrw/exec";
-let chart;
+const API="https://script.google.com/macros/s/AKfycbwAbg20ybO32y0y6xoOfvdJAeVipwkM7sT82XUkM9afVCWSlkU4JlhsNaLES8GExMrw/exec";
 
-function rupiah(n){
- return "Rp " + Number(n || 0).toLocaleString("id-ID");
-}
-
-function loadData(){
-
-fetch(API + "?mode=surat")
-.then(r=>r.json())
-.then(res=>{
-
- let data = res.data || [];
- let tbody = "";
- let spt=0,kwt=0,dpr=0,tt=0,total=0;
-
- for(let i=1;i<data.length;i++){
-
-   let row = data[i];
-
-   let tanggal = row[1];
-   let jenis   = row[2];
-   let nomor   = row[3];
-   let nama    = row[4];
-   let tujuan  = row[5];
-   let nominal = Number(row[6] || 0);
-
-   if(jenis=="SPT") spt++;
-   if(jenis=="KUITANSI") kwt++;
-   if(jenis=="DPR") dpr++;
-   if(jenis=="TT") tt++;
-
-   total += nominal;
-
-   tbody += `
-   <tr>
-   <td>${tanggal}</td>
-   <td>${jenis}</td>
-   <td>${nomor}</td>
-   <td>${nama}</td>
-   <td>${tujuan}</td>
-   <td align='right'>${rupiah(nominal)}</td>
-   </tr>
-   `;
- }
-
- document.getElementById("tbl").querySelector("tbody").innerHTML = tbody;
-
- document.getElementById("spt").innerText = spt;
- document.getElementById("kwt").innerText = kwt;
- document.getElementById("dpr").innerText = dpr;
- document.getElementById("tt").innerText  = tt;
- document.getElementById("uang").innerText = rupiah(total);
-
- drawChart(spt,kwt,dpr,tt);
-
-});
-}
-
-function drawChart(a,b,c,d){
-
-const ctx = document.getElementById("chart1");
-
-if(chart) chart.destroy();
-
-chart = new Chart(ctx,{
-type:'bar',
-data:{
-labels:['SPT','KUITANSI','DPR','TT'],
-datasets:[{
-label:'Jumlah Dokumen',
-data:[a,b,c,d]
-}]
-},
-options:{
-responsive:true
-}
-});
-
+if(!localStorage.getItem("token")){
+location.href="login.html";
 }
 
 loadData();
+
+function loadData(){
+
+fetch(API+"?mode=surat")
+.then(r=>r.json())
+.then(res=>{
+
+if(res.status!="success") return;
+
+let data=res.data;
+let html="";
+
+let total=0;
+let spt=0;
+let dpr=0;
+let kwt=0;
+
+for(let i=1;i<data.length;i++){
+
+let row=data[i];
+
+let tgl=row[1];
+let jenis=row[2];
+let nomor=row[3];
+let nama=row[4];
+let tujuan=row[5];
+let nominal=parseInt(row[6]||0);
+
+total += nominal;
+
+if(jenis=="SPT") spt++;
+if(jenis=="DPR") dpr++;
+if(jenis=="KUITANSI") kwt++;
+
+html += `
+<tr>
+<td>${tgl}</td>
+<td>${jenis}</td>
+<td>${nomor}</td>
+<td>${nama}</td>
+<td>${tujuan}</td>
+<td>Rp ${nominal.toLocaleString("id-ID")}</td>
+</tr>
+`;
+}
+
+document.getElementById("tbody").innerHTML=html;
+document.getElementById("jml").innerText=data.length-1;
+document.getElementById("uang").innerText=
+"Rp"+total.toLocaleString("id-ID");
+document.getElementById("spt").innerText=spt;
+document.getElementById("dpr").innerText=dpr;
+
+grafik(spt,dpr,kwt);
+
+});
+}
+
+function grafik(spt,dpr,kwt){
+
+new Chart(document.getElementById("grafik"),{
+type:"bar",
+data:{
+labels:["SPT","DPR","Kwitansi"],
+datasets:[{
+label:"Jumlah Dokumen",
+data:[spt,dpr,kwt],
+borderWidth:1
+}]
+},
+options:{
+responsive:true,
+plugins:{
+legend:{display:false}
+}
+}
+});
+
+}
 </script>
 
 </body>
