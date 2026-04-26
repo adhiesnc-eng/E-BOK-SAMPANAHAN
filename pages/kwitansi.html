@@ -3,164 +3,217 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>KUITANSI - E-BOK Sampanahan</title>
+<title>Kwitansi Premium - E-BOK</title>
+
 <style>
-body{font-family:Arial,sans-serif;background:#f4f7f5;margin:0}
-.wrap{max-width:900px;margin:auto;padding:20px}
-.card,#preview{background:#fff;padding:20px;border-radius:14px;box-shadow:0 3px 12px rgba(0,0,0,.08);margin-bottom:20px}
-input,textarea,select,button{width:100%;padding:10px;margin:8px 0;border:1px solid #ccc;border-radius:8px;box-sizing:border-box}
-button{background:#2e7d32;color:#fff;border:none;cursor:pointer}
-button:hover{background:#1b5e20}
-h1,h2{color:#1b5e20;margin:0 0 12px}
-.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.center{text-align:center}.right{text-align:right}
-.small{font-size:12px;color:#666}
-@media print {.card{display:none} body{background:#fff} #preview{box-shadow:none}}
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial,sans-serif}
+body{
+background:linear-gradient(135deg,#eef7f0,#dff0e3);
+padding:18px;
+color:#222;
+}
+.wrap{
+max-width:760px;
+margin:auto;
+background:#fff;
+padding:28px;
+border-radius:20px;
+box-shadow:0 10px 24px rgba(0,0,0,.08);
+}
+h1{color:#1b5e20;font-size:28px;margin-bottom:8px}
+.sub{color:#666;font-size:14px;margin-bottom:22px}
+.grid{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:14px;
+}
+.group{margin-bottom:14px}
+.group label{
+display:block;
+font-size:13px;
+margin-bottom:6px;
+color:#444;
+}
+.group input,.group textarea{
+width:100%;
+padding:12px;
+border:1px solid #cfd8dc;
+border-radius:12px;
+font-size:15px;
+}
+textarea{min-height:90px;resize:vertical}
+.full{grid-column:1/-1}
+.box-terbilang{
+background:#f1f8f2;
+padding:12px;
+border-radius:12px;
+color:#1b5e20;
+font-weight:bold;
+line-height:1.5;
+}
+.actions{
+display:flex;
+gap:10px;
+flex-wrap:wrap;
+margin-top:18px;
+}
+button{
+padding:12px 16px;
+border:none;
+border-radius:12px;
+cursor:pointer;
+font-weight:bold;
+}
+.green{background:#2e7d32;color:#fff}
+.blue{background:#1565c0;color:#fff}
+.gray{background:#eceff1;color:#222}
+.info{
+margin-top:16px;
+font-size:13px;
+color:#666;
+}
+@media(max-width:700px){
+.grid{grid-template-columns:1fr}
+}
+@media print{
+.actions,.info{display:none}
+body{background:#fff;padding:0}
+.wrap{box-shadow:none;border-radius:0}
+}
 </style>
 </head>
+
 <body>
+
 <div class="wrap">
+<h1>🧾 Kwitansi Pembayaran</h1>
+<div class="sub">Form premium bukti pembayaran resmi</div>
 
-<div class="card">
-<h1>Generator KUITANSI</h1>
+<div class="grid">
 
-<input id="dari" placeholder="Sudah terima dari">
-<input id="nominal" type="number" placeholder="Nominal (contoh 450000)">
-<textarea id="untuk" placeholder="Untuk pembayaran"></textarea>
-<input id="penerima" placeholder="Nama Penerima">
-
-<div class="row">
-<input id="mengetahui" placeholder="Mengetahui (Nama)">
-<input id="jabatanMengetahui" placeholder="Jabatan Mengetahui">
+<div class="group">
+<label>Nomor Kwitansi</label>
+<input id="nomor" readonly>
 </div>
 
-<div class="row">
-<input id="bendahara" placeholder="Nama Bendahara">
-<input id="jabatanBendahara" placeholder="Jabatan Bendahara">
+<div class="group">
+<label>Tanggal</label>
+<input type="date" id="tanggal">
 </div>
 
-<div class="row">
-<label><input type="checkbox" id="terbilang" checked> Aktifkan Terbilang</label>
-<label><input type="checkbox" id="materai"> Tampilkan Materai Rp10.000</label>
+<div class="group full">
+<label>Sudah Terima Dari</label>
+<input id="dari" placeholder="Nama pemberi">
 </div>
 
-<button onclick="generate()">Generate Kuitansi</button>
-<button onclick="window.print()">Print / PDF</button>
+<div class="group full">
+<label>Uang Sejumlah (Rp)</label>
+<input id="nominal" type="number" value="0" oninput="ubahTerbilang()">
 </div>
 
-<div id="preview"></div>
+<div class="group full">
+<label>Untuk Pembayaran</label>
+<textarea id="tujuan" placeholder="Keperluan pembayaran"></textarea>
+</div>
+
+<div class="group full">
+<label>Terbilang</label>
+<div class="box-terbilang" id="terbilang">Nol Rupiah</div>
+</div>
+
+</div>
+
+<div class="actions">
+<button class="green" onclick="simpan()">💾 Simpan</button>
+<button class="blue" onclick="window.print()">🖨️ Print</button>
+<button class="gray" onclick="location.href='dashboard.html'">⬅ Dashboard</button>
+</div>
+
+<div class="info" id="info">Siap digunakan.</div>
 
 </div>
 
 <script>
-const API = "PASTE_URL_WEBAPP_GAS";
+const API="https://script.google.com/macros/s/AKfycbwAbg20ybO32y0y6xoOfvdJAeVipwkM7sT82XUkM9afVCWSlkU4JlhsNaLES8GExMrw/exec";
 
-function romawi(bln){
- return ["I","II","III","IV","V","VI","VII","VIII","IX","X","XI","XII"][bln];
+if(!localStorage.getItem("token")){
+location.href="login.html";
 }
 
-function formatRupiah(n){
- return "Rp " + Number(n || 0).toLocaleString("id-ID");
-}
+loadNomor();
+document.getElementById("tanggal").value =
+new Date().toISOString().slice(0,10);
 
-function todayText(){
- return new Date().toLocaleDateString("id-ID",{day:"numeric",month:"long",year:"numeric"});
-}
-
-function terbilang(n){
- n = parseInt(n || 0);
- if(n===0) return "Nol Rupiah";
- const angka=["","Satu","Dua","Tiga","Empat","Lima","Enam","Tujuh","Delapan","Sembilan","Sepuluh","Sebelas"];
- function conv(x){
-   if(x<12) return angka[x];
-   if(x<20) return conv(x-10)+" Belas";
-   if(x<100) return conv(Math.floor(x/10))+" Puluh "+conv(x%10);
-   if(x<200) return "Seratus "+conv(x-100);
-   if(x<1000) return conv(Math.floor(x/100))+" Ratus "+conv(x%100);
-   if(x<2000) return "Seribu "+conv(x-1000);
-   if(x<1000000) return conv(Math.floor(x/1000))+" Ribu "+conv(x%1000);
-   if(x<1000000000) return conv(Math.floor(x/1000000))+" Juta "+conv(x%1000000);
-   return x.toString();
- }
- return conv(n).replace(/\s+/g,' ').trim()+" Rupiah";
-}
-
-function generate(){
-
-fetch(API + "?mode=nomorKWT")
+function loadNomor(){
+fetch(API+"?mode=nomorKWT")
 .then(r=>r.json())
 .then(res=>{
-
- let nomor = res.nomor;
- let d = new Date();
- let fullNo = nomor + "/KWT/BOK/SPNH/" + romawi(d.getMonth()) + "/" + d.getFullYear();
-
- let nominal = nominalEl().value;
- let showTerbilang = document.getElementById("terbilang").checked;
- let showMaterai = document.getElementById("materai").checked;
-
- let html = `
- <div class='center'>
-   <h2>KUITANSI</h2>
-   No : ${fullNo}
- </div>
- <br>
-
- <table width='100%' style='line-height:1.8'>
- <tr><td width='200'>Sudah terima dari</td><td>: ${val("dari")}</td></tr>
- <tr><td>Uang sejumlah</td><td>: ${formatRupiah(nominal)}</td></tr>
- ${showTerbilang ? `<tr><td>Terbilang</td><td>: <b>${terbilang(nominal)}</b></td></tr>` : ``}
- <tr><td>Untuk pembayaran</td><td>: ${val("untuk")}</td></tr>
- </table>
-
- <br><br>
-
- <div class='row'>
-   <div class='center'>
-     Mengetahui,<br>
-     ${val("jabatanMengetahui")}<br><br><br><br>
-     <b>${val("mengetahui")}</b>
-   </div>
-
-   <div class='center'>
-     Penerima,<br><br>
-     ${showMaterai ? "<div>[ MATERAI 10.000 ]</div>" : "<br>"}
-     <br><br>
-     <b>${val("penerima")}</b>
-   </div>
- </div>
-
- <br><br>
-
- <div class='right'>
-   Sampanahan, ${todayText()}<br><br>
-   ${val("jabatanBendahara")}<br><br><br><br>
-   <b>${val("bendahara")}</b>
- </div>
- `;
-
- document.getElementById("preview").innerHTML = html;
-
- // simpan
- fetch(API + "?mode=saveSurat",{
-   method:"POST",
-   body:JSON.stringify({
-     token:localStorage.getItem("token"),
-     tanggal:todayText(),
-     jenis:"KUITANSI",
-     nomor:fullNo,
-     nama:val("penerima"),
-     tujuan:val("untuk"),
-     nominal:nominal
-   })
- });
-
+if(res.status=="success"){
+document.getElementById("nomor").value=res.nomor;
+}
 });
 }
 
-function val(id){ return document.getElementById(id).value; }
-function nominalEl(){ return document.getElementById("nominal"); }
+function penyebut(n){
+const huruf=["","Satu","Dua","Tiga","Empat","Lima","Enam","Tujuh","Delapan","Sembilan","Sepuluh","Sebelas"];
+n=parseInt(n);
+if(n<12) return huruf[n];
+if(n<20) return penyebut(n-10)+" Belas";
+if(n<100) return penyebut(n/10)+" Puluh "+penyebut(n%10);
+if(n<200) return "Seratus "+penyebut(n-100);
+if(n<1000) return penyebut(n/100)+" Ratus "+penyebut(n%100);
+if(n<2000) return "Seribu "+penyebut(n-1000);
+if(n<1000000) return penyebut(n/1000)+" Ribu "+penyebut(n%1000);
+if(n<1000000000) return penyebut(n/1000000)+" Juta "+penyebut(n%1000000);
+return n;
+}
 
+function ubahTerbilang(){
+let n=document.getElementById("nominal").value || 0;
+document.getElementById("terbilang").innerText =
+penyebut(n)+" Rupiah";
+}
+
+function simpan(){
+
+let data={
+mode:"saveSurat",
+tanggal:document.getElementById("tanggal").value,
+jenis:"KUITANSI",
+nomor:document.getElementById("nomor").value,
+nama:document.getElementById("dari").value,
+tujuan:document.getElementById("tujuan").value,
+nominal:document.getElementById("nominal").value
+};
+
+if(data.nama=="" || data.nominal=="0"){
+alert("Lengkapi data");
+return;
+}
+
+document.getElementById("info").innerText="Menyimpan data...";
+
+fetch(API,{
+method:"POST",
+body:JSON.stringify(data)
+})
+.then(r=>r.json())
+.then(res=>{
+
+if(res.status=="success"){
+document.getElementById("info").innerText="✅ Kwitansi tersimpan";
+loadNomor();
+}else{
+document.getElementById("info").innerText="❌ Gagal menyimpan";
+}
+
+})
+.catch(()=>{
+document.getElementById("info").innerText="❌ Koneksi gagal";
+});
+
+}
 </script>
+
 </body>
 </html>
