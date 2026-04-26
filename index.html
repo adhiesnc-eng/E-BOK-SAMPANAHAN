@@ -1,1 +1,33 @@
-<!DOCTYPE html><html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>E-BOK Sampanahan</title><link rel='stylesheet' href='css/style.css'><script>setTimeout(()=>location='pages/login.html',1800)</script></head><body><div class='center'><h1>E-BOK Sampanahan</h1><p>UPTD Puskesmas Sampanahan</p></div></body></html>
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#1b5e20">
+
+<title>E-BOK Puskesmas Sampanahan</title>
+
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="assets/icon-192.png">
+
+<meta http-equiv="refresh" content="0; url=pages/login.html">
+
+</head>
+<body>
+
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", function () {
+    navigator.serviceWorker.register("./service-worker.js")
+      .then(function(reg){
+        console.log("Service Worker aktif", reg);
+      })
+      .catch(function(err){
+        console.log("SW gagal:", err);
+      });
+  });
+}
+</script>
+
+</body>
+</html>
