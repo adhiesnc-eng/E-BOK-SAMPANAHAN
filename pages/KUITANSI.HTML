@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>KUITANSI - E-BOK Sampanahan</title>
+<style>
+body{font-family:Arial,sans-serif;background:#f4f7f5;margin:0}
+.wrap{max-width:900px;margin:auto;padding:20px}
+.card,#preview{background:#fff;padding:20px;border-radius:14px;box-shadow:0 3px 12px rgba(0,0,0,.08);margin-bottom:20px}
+input,textarea,select,button{width:100%;padding:10px;margin:8px 0;border:1px solid #ccc;border-radius:8px;box-sizing:border-box}
+button{background:#2e7d32;color:#fff;border:none;cursor:pointer}
+button:hover{background:#1b5e20}
+h1,h2{color:#1b5e20;margin:0 0 12px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.center{text-align:center}.right{text-align:right}
+.small{font-size:12px;color:#666}
+@media print {.card{display:none} body{background:#fff} #preview{box-shadow:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="card">
+<h1>Generator KUITANSI</h1>
+
+<input id="dari" placeholder="Sudah terima dari">
+<input id="nominal" type="number" placeholder="Nominal (contoh 450000)">
+<textarea id="untuk" placeholder="Untuk pembayaran"></textarea>
+<input id="penerima" placeholder="Nama Penerima">
+
+<div class="row">
+<input id="mengetahui" placeholder="Mengetahui (Nama)">
+<input id="jabatanMengetahui" placeholder="Jabatan Mengetahui">
+</div>
+
+<div class="row">
+<input id="bendahara" placeholder="Nama Bendahara">
+<input id="jabatanBendahara" placeholder="Jabatan Bendahara">
+</div>
+
+<div class="row">
+<label><input type="checkbox" id="terbilang" checked> Aktifkan Terbilang</label>
+<label><input type="checkbox" id="materai"> Tampilkan Materai Rp10.000</label>
+</div>
+
+<button onclick="generate()">Generate Kuitansi</button>
+<button onclick="window.print()">Print / PDF</button>
+</div>
+
+<div id="preview"></div>
+
+</div>
+
+<script>
+const API = "PASTE_URL_WEBAPP_GAS";
+
+function romawi(bln){
+ return ["I","II","III","IV","V","VI","VII","VIII","IX","X","XI","XII"][bln];
+}
+
+function formatRupiah(n){
+ return "Rp " + Number(n || 0).toLocaleString("id-ID");
+}
+
+function todayText(){
+ return new Date().toLocaleDateString("id-ID",{day:"numeric",month:"long",year:"numeric"});
+}
+
+function terbilang(n){
+ n = parseInt(n || 0);
+ if(n===0) return "Nol Rupiah";
+ const angka=["","Satu","Dua","Tiga","Empat","Lima","Enam","Tujuh","Delapan","Sembilan","Sepuluh","Sebelas"];
+ function conv(x){
+   if(x<12) return angka[x];
+   if(x<20) return conv(x-10)+" Belas";
+   if(x<100) return conv(Math.floor(x/10))+" Puluh "+conv(x%10);
+   if(x<200) return "Seratus "+conv(x-100);
+   if(x<1000) return conv(Math.floor(x/100))+" Ratus "+conv(x%100);
+   if(x<2000) return "Seribu "+conv(x-1000);
+   if(x<1000000) return conv(Math.floor(x/1000))+" Ribu "+conv(x%1000);
+   if(x<1000000000) return conv(Math.floor(x/1000000))+" Juta "+conv(x%1000000);
+   return x.toString();
+ }
+ return conv(n).replace(/\s+/g,' ').trim()+" Rupiah";
+}
+
+function generate(){
+
+fetch(API + "?mode=nomorKWT")
+.then(r=>r.json())
+.then(res=>{
+
+ let nomor = res.nomor;
+ let d = new Date();
+ let fullNo = nomor + "/KWT/BOK/SPNH/" + romawi(d.getMonth()) + "/" + d.getFullYear();
+
+ let nominal = nominalEl().value;
+ let showTerbilang = document.getElementById("terbilang").checked;
+ let showMaterai = document.getElementById("materai").checked;
+
+ let html = `
+ <div class='center'>
+   <h2>KUITANSI</h2>
+   No : ${fullNo}
+ </div>
+ <br>
+
+ <table width='100%' style='line-height:1.8'>
+ <tr><td width='200'>Sudah terima dari</td><td>: ${val("dari")}</td></tr>
+ <tr><td>Uang sejumlah</td><td>: ${formatRupiah(nominal)}</td></tr>
+ ${showTerbilang ? `<tr><td>Terbilang</td><td>: <b>${terbilang(nominal)}</b></td></tr>` : ``}
+ <tr><td>Untuk pembayaran</td><td>: ${val("untuk")}</td></tr>
+ </table>
+
+ <br><br>
+
+ <div class='row'>
+   <div class='center'>
+     Mengetahui,<br>
+     ${val("jabatanMengetahui")}<br><br><br><br>
+     <b>${val("mengetahui")}</b>
+   </div>
+
+   <div class='center'>
+     Penerima,<br><br>
+     ${showMaterai ? "<div>[ MATERAI 10.000 ]</div>" : "<br>"}
+     <br><br>
+     <b>${val("penerima")}</b>
+   </div>
+ </div>
+
+ <br><br>
+
+ <div class='right'>
+   Sampanahan, ${todayText()}<br><br>
+   ${val("jabatanBendahara")}<br><br><br><br>
+   <b>${val("bendahara")}</b>
+ </div>
+ `;
+
+ document.getElementById("preview").innerHTML = html;
+
+ // simpan
+ fetch(API + "?mode=saveSurat",{
+   method:"POST",
+   body:JSON.stringify({
+     token:localStorage.getItem("token"),
+     tanggal:todayText(),
+     jenis:"KUITANSI",
+     nomor:fullNo,
+     nama:val("penerima"),
+     tujuan:val("untuk"),
+     nominal:nominal
+   })
+ });
+
+});
+}
+
+function val(id){ return document.getElementById(id).value; }
+function nominalEl(){ return document.getElementById("nominal"); }
+
+</script>
+</body>
+</html>
