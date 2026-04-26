@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DPR - E-BOK Sampanahan</title>
+<style>
+body{font-family:Arial,sans-serif;background:#f4f7f5;margin:0}
+.wrap{max-width:900px;margin:auto;padding:20px}
+.card,#preview{background:#fff;padding:20px;border-radius:14px;box-shadow:0 3px 12px rgba(0,0,0,.08);margin-bottom:20px}
+input,button{width:100%;padding:10px;margin:8px 0;border:1px solid #ccc;border-radius:8px;box-sizing:border-box}
+button{background:#2e7d32;color:#fff;border:none;cursor:pointer}
+button:hover{background:#1b5e20}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+h1,h2{color:#1b5e20;margin:0 0 12px}
+.center{text-align:center}.right{text-align:right}
+@media print {.card{display:none} body{background:#fff} #preview{box-shadow:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="card">
+<h1>Generator DPR</h1>
+
+<input id="nama" placeholder="Nama Petugas">
+<input id="tujuan" placeholder="Tujuan Perjalanan">
+
+<div class="row">
+<input type="date" id="tgl1">
+<input type="date" id="tgl2">
+</div>
+
+<input id="transport" type="number" placeholder="Biaya Transport">
+<input id="makan" type="number" placeholder="Biaya Makan / Harian">
+<input id="lain" type="number" placeholder="Biaya Lain-lain">
+
+<button onclick="generate()">Generate DPR</button>
+<button onclick="window.print()">Print / PDF</button>
+</div>
+
+<div id="preview"></div>
+
+</div>
+
+<script>
+const API = "https://script.google.com/macros/s/AKfycbwAbg20ybO32y0y6xoOfvdJAeVipwkM7sT82XUkM9afVCWSlkU4JlhsNaLES8GExMrw/exec";
+
+function romawi(bln){
+ return ["I","II","III","IV","V","VI","VII","VIII","IX","X","XI","XII"][bln];
+}
+
+function rupiah(n){
+ return "Rp " + Number(n || 0).toLocaleString("id-ID");
+}
+
+function todayText(){
+ return new Date().toLocaleDateString("id-ID",{day:"numeric",month:"long",year:"numeric"});
+}
+
+function val(id){
+ return document.getElementById(id).value;
+}
+
+function generate(){
+
+fetch(API + "?mode=nomorDPR")
+.then(r=>r.json())
+.then(res=>{
+
+ let d = new Date();
+ let nomor = res.nomor + "/DPR/BOK/SPNH/" + romawi(d.getMonth()) + "/" + d.getFullYear();
+
+ let transport = Number(val("transport") || 0);
+ let makan = Number(val("makan") || 0);
+ let lain = Number(val("lain") || 0);
+
+ let total = transport + makan + lain;
+
+ let html = `
+ <div class='center'>
+   <h2>DAFTAR PENGELUARAN RIIL</h2>
+   Nomor : ${nomor}
+ </div>
+
+ <br>
+
+ <table width='100%' style='line-height:1.8'>
+ <tr><td width='200'>Nama Petugas</td><td>: ${val("nama")}</td></tr>
+ <tr><td>Tujuan</td><td>: ${val("tujuan")}</td></tr>
+ <tr><td>Tanggal</td><td>: ${val("tgl1")} s/d ${val("tgl2")}</td></tr>
+ </table>
+
+ <br>
+
+ <table width='100%' border='1' cellspacing='0' cellpadding='8'>
+ <tr>
+   <th>No</th>
+   <th>Uraian</th>
+   <th>Jumlah</th>
+ </tr>
+
+ <tr>
+   <td align='center'>1</td>
+   <td>Transport</td>
+   <td align='right'>${rupiah(transport)}</td>
+ </tr>
+
+ <tr>
+   <td align='center'>2</td>
+   <td>Makan / Harian</td>
+   <td align='right'>${rupiah(makan)}</td>
+ </tr>
+
+ <tr>
+   <td align='center'>3</td>
+   <td>Lain-lain</td>
+   <td align='right'>${rupiah(lain)}</td>
+ </tr>
+
+ <tr>
+   <td colspan='2'><b>TOTAL</b></td>
+   <td align='right'><b>${rupiah(total)}</b></td>
+ </tr>
+ </table>
+
+ <br><br>
+
+ Saya menyatakan bahwa seluruh biaya di atas benar-benar dikeluarkan.
+
+ <br><br><br>
+
+ <div class='right'>
+ Sampanahan, ${todayText()}<br>
+ Yang Membuat Pernyataan,
+ <br><br><br><br>
+ <b>${val("nama")}</b>
+ </div>
+ `;
+
+ document.getElementById("preview").innerHTML = html;
+
+ // simpan
+ fetch(API + "?mode=saveSurat",{
+   method:"POST",
+   body:JSON.stringify({
+     token:localStorage.getItem("token"),
+     tanggal:todayText(),
+     jenis:"DPR",
+     nomor:nomor,
+     nama:val("nama"),
+     tujuan:val("tujuan"),
+     nominal:total
+   })
+ });
+
+});
+}
+</script>
+</body>
+</html>
