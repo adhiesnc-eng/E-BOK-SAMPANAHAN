@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TANDA TERIMA - E-BOK Sampanahan</title>
+<style>
+body{font-family:Arial,sans-serif;background:#f4f7f5;margin:0}
+.wrap{max-width:900px;margin:auto;padding:20px}
+.card,#preview{background:#fff;padding:20px;border-radius:14px;box-shadow:0 3px 12px rgba(0,0,0,.08);margin-bottom:20px}
+input,select,textarea,button{width:100%;padding:10px;margin:8px 0;border:1px solid #ccc;border-radius:8px;box-sizing:border-box}
+button{background:#2e7d32;color:#fff;border:none;cursor:pointer}
+button:hover{background:#1b5e20}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+h1,h2{color:#1b5e20;margin:0 0 12px}
+.center{text-align:center}.right{text-align:right}
+.small{font-size:12px;color:#666}
+@media print {.card{display:none} body{background:#fff} #preview{box-shadow:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="card">
+<h1>Generator TANDA TERIMA</h1>
+
+<select id="jenis" onchange="toggleNominal()">
+<option value="Uang">Uang</option>
+<option value="Barang">Barang</option>
+<option value="Dokumen">Dokumen</option>
+<option value="Lainnya">Lainnya</option>
+</select>
+
+<input id="dari" placeholder="Diterima dari">
+<input id="penerima" placeholder="Nama Penerima">
+<textarea id="uraian" placeholder="Uraian / Keterangan"></textarea>
+
+<div id="boxNominal">
+<input id="nominal" type="number" placeholder="Nominal (opsional)">
+</div>
+
+<button onclick="generate()">Generate Tanda Terima</button>
+<button onclick="window.print()">Print / PDF</button>
+
+</div>
+
+<div id="preview"></div>
+
+</div>
+
+<script>
+const API = "https://script.google.com/macros/s/AKfycbwAbg20ybO32y0y6xoOfvdJAeVipwkM7sT82XUkM9afVCWSlkU4JlhsNaLES8GExMrw/exec";
+
+function romawi(bln){
+ return ["I","II","III","IV","V","VI","VII","VIII","IX","X","XI","XII"][bln];
+}
+
+function rupiah(n){
+ if(!n || Number(n)==0) return "-";
+ return "Rp " + Number(n).toLocaleString("id-ID");
+}
+
+function todayText(){
+ return new Date().toLocaleDateString("id-ID",{day:"numeric",month:"long",year:"numeric"});
+}
+
+function val(id){
+ return document.getElementById(id).value;
+}
+
+function toggleNominal(){
+ const jenis = val("jenis");
+ document.getElementById("boxNominal").style.display =
+   (jenis=="Dokumen") ? "none" : "block";
+}
+
+function generate(){
+
+fetch(API + "?mode=nomorTT")
+.then(r=>r.json())
+.then(res=>{
+
+ let d = new Date();
+ let nomor = res.nomor + "/TT/BOK/SPNH/" + romawi(d.getMonth()) + "/" + d.getFullYear();
+
+ let html = `
+ <div class='center'>
+   <h2>TANDA TERIMA</h2>
+   No : ${nomor}
+ </div>
+
+ <br>
+
+ <table width='100%' style='line-height:1.8'>
+ <tr><td width='200'>Jenis</td><td>: ${val("jenis")}</td></tr>
+ <tr><td>Diterima dari</td><td>: ${val("dari")}</td></tr>
+ <tr><td>Nama Penerima</td><td>: ${val("penerima")}</td></tr>
+ <tr><td>Uraian</td><td>: ${val("uraian")}</td></tr>
+ <tr><td>Jumlah / Nilai</td><td>: ${rupiah(val("nominal"))}</td></tr>
+ </table>
+
+ <br><br>
+
+ Demikian tanda terima ini dibuat untuk dipergunakan sebagaimana mestinya.
+
+ <br><br><br>
+
+ <div class='right'>
+ Sampanahan, ${todayText()}<br>
+ Penerima,
+ <br><br><br><br>
+ <b>${val("penerima")}</b>
+ </div>
+ `;
+
+ document.getElementById("preview").innerHTML = html;
+
+ // simpan
+ fetch(API + "?mode=saveSurat",{
+   method:"POST",
+   body:JSON.stringify({
+     token:localStorage.getItem("token"),
+     tanggal:todayText(),
+     jenis:"TT",
+     nomor:nomor,
+     nama:val("penerima"),
+     tujuan:val("uraian"),
+     nominal:val("nominal")
+   })
+ });
+
+});
+}
+</script>
+</body>
+</html>
